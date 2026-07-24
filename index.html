@@ -6,6 +6,40 @@
     <title>Try Out TWK SKD STAN</title>
     <!-- Chart.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+  // === KONFIGURASI FIREBASE ===
+  const firebaseConfig = {
+  apiKey: "AIzaSyDhqpvWkEc3S3xMEIqdOS4jwrumkQ49tSM",
+  authDomain: "latihan-twk-5dedd.firebaseapp.com",
+  // SESUAIKAN DENGAN LINK DI SCREENSHOT KAMU:
+  databaseURL: "https://latihan-twk-5dedd-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "latihan-twk-5dedd",
+  storageBucket: "latihan-twk-5dedd.firebasestorage.app",
+  messagingSenderId: "894125515312",
+  appId: "1:894125515312:web:5bf7689b71e306ce99c3f5",
+  measurementId: "G-YEGTGVGXLY"
+};
+
+  if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const db = (typeof firebase !== 'undefined') ? firebase.database() : null;
+  const USER_ID = "satrio_main_user"; 
+
+  function simpanJawabanKeCloud(namaSesi, nomorSoal, pilihanJawaban) {
+      if (!db) return;
+      const safeSesi = namaSesi.replace(/[^a-zA-Z0-9_-]/g, "_");
+      db.ref(`progres_user/${USER_ID}/${safeSesi}/soal_${nomorSoal}`).set({
+          jawaban: pilihanJawaban,
+          updatedAt: Date.now()
+      });
+  }
+
+  // ... (kode script bawaan kamu lanjut di bawah sini) ...
+</script>
+
     <style>
         :root {
             --primary: #1e3a8a;
@@ -922,14 +956,33 @@
         }
 
         function nextQuestion() {
-            resetTimer();
-            currentIdx++;
-            if (currentIdx < activeQuizData.length) {
-                loadQuestion();
-            } else {
-                showResult();
-            }
-        }
+    // 1. Dapatkan pilihan jawaban yang sedang dipilih user saat ini
+    const selectedRadio = document.querySelector('input[name="option"]:checked') || 
+                          document.querySelector('.option.selected') || 
+                          document.querySelector('.option-btn.active');
+    
+    // Ambil nilainya (opsi A, B, C, D, atau E)
+    const jawabanDipilih = selectedRadio ? (selectedRadio.value || selectedRadio.innerText.trim()) : null;
+
+    // 2. Simpan ke Firebase kalau ada jawaban yang dipilih
+    if (jawabanDipilih) {
+        const selectSesi = document.getElementById('pilihSesi');
+        const namaSesi = selectSesi ? selectSesi.value : "Sesi_TWK";
+        
+        // Simpan nomor soal (currentIdx + 1) dan jawabannya ke cloud
+        simpanJawabanKeCloud(namaSesi, currentIdx + 1, jawabanDipilih);
+    }
+
+    // --- KODE BAWAAN KAMU DI BAWAH INI ---
+    resetTimer();
+    currentIdx++;
+    if (currentIdx < activeQuizData.length) {
+        loadQuestion();
+    } else {
+        showResult();
+    }
+}
+        
 
         function showResult() {
             mainCard.classList.remove('wide-mode');
