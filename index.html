@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Try Out TWK SKD STAN</title>
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --accent: #2563eb;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+            --correct: #16a34a;
+            --wrong: #dc2626;
+            --answered: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            border: 1px solid var(--border);
+            transition: max-width 0.3s ease;
+        }
+
+        /* Mode lebar saat kuis, review, atau lihat grafik */
+        .card.wide-mode {
+            max-width: 950px;
+        }
+
+        /* Layout Grid Dua Kolom (Kiri: Konten, Kanan: Navigation Grid) */
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .split-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 12px;
+        }
+
+        .badge {
+            background: #dbeafe;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .timer {
+            font-weight: bold;
+            color: #e11d48;
+        }
+
+        .question {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            border-color: var(--accent);
+            background: #eff6ff;
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background: #dbeafe;
+            font-weight: 600;
+        }
+
+        /* Styling Opsi Khusus Mode Pembahasan */
+        .option-btn.opt-correct {
+            background: #dcfce7 !important;
+            border-color: var(--correct) !important;
+            color: #14532d;
+            font-weight: 600;
+        }
+
+        .option-btn.opt-wrong {
+            background: #fee2e2 !important;
+            border-color: var(--wrong) !important;
+            color: #7f1d1d;
+            font-weight: 600;
+        }
+
+        .btn-action {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover {
+            background: var(--accent);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .select-session {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            margin-bottom: 12px;
+            font-size: 1rem;
+            background: var(--surface);
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Status Sesi Info Card */
+        .session-info {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .session-status-tag {
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .status-done {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-new {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* Sidebar Navigasi Nomor Soal */
+        .nav-panel {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: fit-content;
+        }
+
+        .nav-panel h4 {
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .num-btn {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .num-btn:hover {
+            border-color: var(--accent);
+        }
+
+        /* Status Warna Nomor Soal saat Kuis */
+        .num-btn.answered {
+            background: var(--answered);
+            color: white;
+            border-color: var(--answered);
+        }
+
+        .num-btn.active {
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 0 2px #93c5fd;
+        }
+
+        /* Status Warna Nomor Soal saat Pembahasan */
+        .num-btn.rev-correct {
+            background: var(--correct);
+            color: white;
+            border-color: var(--correct);
+        }
+
+        .num-btn.rev-wrong {
+            background: var(--wrong);
+            color: white;
+            border-color: var(--wrong);
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .hidden { display: none; }
+        
+        .result-box {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin: 20px auto;
+        }
+
+        .explanation-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f1f5f9;
+            border-left: 4px solid var(--primary);
+            font-size: 0.92rem;
+            line-height: 1.5;
+            color: #334155;
+            text-align: left;
+        }
+
+        /* Styling Tambahan untuk Dashboard / Grafik */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-card h5 {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            margin-bottom: 25px;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            background: var(--bg);
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="main-card">
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h2 style="margin-bottom: 10px; color: var(--primary);">Try Out SKD - TWK HOTS</h2>
+            <p style="color: #64748b; margin-bottom: 15px;">50 Soal Komplit | Waktu: 30 Detik per Soal | Standar SKD STAN</p>
+            
+            <label for="pilihSesi" style="font-weight: 600; display: block; margin-bottom: 8px; color: #334155;">Pilih Sesi Soal:</label>
+            <select id="pilihSesi" class="select-session" onchange="updateSessionStatusUI()"></select>
+
+            <div class="session-info" id="session-info-box">
+                <span id="session-status-text">Status: Belum dikerjakan</span>
+                <span id="session-status-badge" class="session-status-tag status-new">Baru</span>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- TAMBAHAN: AREA UPLOAD BANK SOAL (.TXT) -->
+            <!-- ========================================================= -->
+            <div style="margin-bottom: 20px; padding: 15px; border: 2px dashed var(--accent); border-radius: 10px; background: #eff6ff; text-align: center;">
+                <label for="inputTxt" style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 6px; color: var(--primary);">
+                    📁 Import Bank Soal Baru (.txt):
+                </label>
+                <input type="file" id="inputTxt" accept=".txt" style="font-size: 0.85rem; cursor: pointer; color: #475569;">
+            </div>
+            <!-- ========================================================= -->
+
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-action" onclick="startQuiz()">Mulai Simulasi</button>
+                <button class="btn-secondary" onclick="openProgressScreen()">📈 Grafik Progress</button>
+            </div>
+
+            <button onclick="resetAllHistory()" style="background: none; border: none; color: #94a3b8; font-size: 0.8rem; margin-top: 10px; cursor: pointer; text-decoration: underline; width: 100%;">Reset Riwayat Pengerjaan</button>
+        </div>
+
+        <!-- Progress / Grafik Screen -->
+        <div id="progress-screen" class="hidden">
+            <div class="header">
+                <h2 style="color: var(--primary);">📊 Grafik Perkembangan Skor TWK</h2>
+                <button class="btn-secondary" onclick="closeProgressScreen()" style="width: auto; padding: 6px 16px;">✕ Tutup</button>
+            </div>
+
+            <!-- Ringkasan Statistik Singkat -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h5>Total Sesi Selesai</h5>
+                    <div class="value" id="stat-total-sessions">0</div>
+                </div>
+                <div class="stat-card">
+                    <h5>Rata-Rata Skor</h5>
+                    <div class="value" id="stat-avg-score">0</div>
+                </div>
+                <div class="stat-card">
+                    <h5>Skor Tertinggi</h5>
+                    <div class="value" id="stat-max-score" style="color: var(--correct);">0</div>
+                </div>
+            </div>
+
+            <!-- Canvas Grafik -->
+            <div class="chart-container">
+                <canvas id="progressChart"></canvas>
+            </div>
+
+            <h4 style="margin-bottom: 10px; color: var(--primary); font-size: 0.95rem;">Riwayat Pengerjaan Detail:</h4>
+            <div class="history-list" id="history-list-container">
+                <!-- Diisi via JS -->
+            </div>
+
+            <button class="btn-action" onclick="closeProgressScreen()" style="margin-top: 20px;">Kembali ke Menu Utama</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="split-container">
+                <!-- Kolom Kiri: Area Soal & Pilihan -->
+                <div class="quiz-main">
+                    <div class="header">
+                        <span class="badge" id="question-count">Soal 1 / 50</span>
+                        <span class="timer" id="timer-display">Waktu: 30s</span>
+                    </div>
+                    <div class="question" id="question-text">Text Soal</div>
+                    <div class="options" id="options-container"></div>
+                    <button class="btn-action" onclick="nextQuestion()">Jawab / Lanjut</button>
+                </div>
+
+                <!-- Kolom Kanan: Grid Navigasi Nomor Soal -->
+                <div class="nav-panel">
+                    <h4>Navigasi Soal</h4>
+                    <div class="nav-grid" id="nav-grid"></div>
+
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: var(--answered);"></div>
+                            <span>Sudah Dijawab</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: var(--surface); border: 1px solid var(--border);"></div>
+                            <span>Belum Dijawab</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="border: 2px solid var(--primary); background: #dbeafe;"></div>
+                            <span>Soal Aktif</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden result-box">
+            <h2 style="color: var(--primary);">Hasil Try Out TWK</h2>
+            <div class="score-circle" id="final-score">0</div>
+            <p id="stat-detail" style="margin-bottom: 15px; color: #475569; font-weight: 500;"></p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-action" onclick="startReview()" style="background: #0284c7;">Lihat Pembahasan Interactive</button>
+                <button class="btn-secondary" onclick="openProgressScreenFromResult()">📊 Lihat Grafik Perkembangan</button>
+                <button class="btn-action" onclick="restartQuiz()" style="background: #475569;">Kembali ke Menu Utama</button>
+            </div>
+        </div>
+
+        <!-- Interactive Review Screen -->
+        <div id="review-screen" class="hidden">
+            <div class="split-container">
+                <!-- Kolom Kiri: Soal, Opsi Jawaban, Kunci & Pembahasan -->
+                <div class="review-main">
+                    <div class="header">
+                        <span class="badge" id="review-count">Pembahasan No. 1</span>
+                        <span id="review-status-badge" class="badge" style="background: #fef3c7; color: #92400e;">Status</span>
+                    </div>
+                    <div class="question" id="review-question-text">Text Soal</div>
+                    <div class="options" id="review-options-container"></div>
+                    
+                    <div class="explanation-box">
+                        <strong>Pembahasan:</strong>
+                        <p id="review-explanation-text" style="margin-top: 5px;"></p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn-action" onclick="prevReview()" style="background: #64748b;">Sebelumnya</button>
+                        <button class="btn-action" onclick="nextReview()">Selanjutnya</button>
+                    </div>
+                    <button class="btn-action" onclick="backToResult()" style="margin-top: 10px; background: #475569;">Kembali ke Ringkasan Hasil</button>
+                </div>
+
+                <!-- Kolom Kanan: Grid Navigasi Pembahasan -->
+                <div class="nav-panel">
+                    <h4>Navigasi Pembahasan</h4>
+                    <div class="nav-grid" id="review-nav-grid"></div>
+
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: var(--correct);"></div>
+                            <span>Jawaban Benar</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="background: var(--wrong);"></div>
+                            <span>Jawaban Salah / Kosong</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-box" style="border: 2px solid var(--primary); background: #dbeafe;"></div>
+                            <span>Posisi Aktif</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="soal.js"></script>
+    <script>
+        const TIMER_LIMIT = 30;
+        let currentIdx = 0;
+        let reviewIdx = 0;
+        let correctCount = 0;
+        let selectedOption = null;
+        let timerInterval = null;
+        let timeLeft = TIMER_LIMIT;
+        let userAnswers = [];
+        let activeQuizData = [];
+        let currentSessionName = "";
+        let chartInstance = null;
+
+        const mainCard = document.getElementById('main-card');
+        const startScreen = document.getElementById('start-screen');
+        const progressScreen = document.getElementById('progress-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const reviewScreen = document.getElementById('review-screen');
+        
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const questionCount = document.getElementById('question-count');
+        const timerDisplay = document.getElementById('timer-display');
+        const selectSesi = document.getElementById('pilihSesi');
+        const navGrid = document.getElementById('nav-grid');
+
+        // Elements Review
+        const reviewNavGrid = document.getElementById('review-nav-grid');
+        const reviewCount = document.getElementById('review-count');
+        const reviewStatusBadge = document.getElementById('review-status-badge');
+        const reviewQuestionText = document.getElementById('review-question-text');
+        const reviewOptionsContainer = document.getElementById('review-options-container');
+        const reviewExplanationText = document.getElementById('review-explanation-text');
+
+        // Elements Session Info
+        const sessionStatusText = document.getElementById('session-status-text');
+        const sessionStatusBadge = document.getElementById('session-status-badge');
+
+        // Helper LocalStorage untuk Riwayat Sesi
+        function getSessionHistory() {
+            return JSON.parse(localStorage.getItem('twk_session_history') || '{}');
+        }
+
+        function saveSessionHistory(sesiName, score, total) {
+            let history = getSessionHistory();
+            history[sesiName] = {
+                completed: true,
+                score: score,
+                total: total,
+                date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
+                timestamp: Date.now()
+            };
+            localStorage.setItem('twk_session_history', JSON.stringify(history));
+        }
+
+        function resetAllHistory() {
+            if (confirm("Yakin ingin menghapus seluruh riwayat pengerjaan sesi dan grafik perkembangan?")) {
+                localStorage.removeItem('twk_session_history');
+                loadSessionDropdown();
+            }
+        }
+
+        // Load dropdown otomatis beserta tanda ikon checklist
+        window.onload = () => {
+            loadSessionDropdown();
+        };
+
+        function loadSessionDropdown() {
+            selectSesi.innerHTML = '';
+            const history = getSessionHistory();
+
+            for (let sesi in daftarSesi) {
+                let opt = document.createElement('option');
+                opt.value = sesi;
+                
+                if (history[sesi] && history[sesi].completed) {
+                    opt.innerText = `✓ ${sesi} (Selesai: ${history[sesi].score}/${history[sesi].total * 5})`;
+                } else {
+                    opt.innerText = sesi;
+                }
+                
+                selectSesi.appendChild(opt);
+            }
+            updateSessionStatusUI();
+        }
+
+        function updateSessionStatusUI() {
+            const history = getSessionHistory();
+            const selected = selectSesi.value;
+
+            if (history[selected] && history[selected].completed) {
+                const h = history[selected];
+                sessionStatusText.innerText = `Sudah dikerjakan (${h.date}) — Skor: ${h.score}/${h.total * 5}`;
+                sessionStatusBadge.innerText = "✓ SELESAI";
+                sessionStatusBadge.className = "session-status-tag status-done";
+            } else {
+                sessionStatusText.innerText = "Status: Belum pernah dikerjakan";
+                sessionStatusBadge.innerText = "BELUM";
+                sessionStatusBadge.className = "session-status-tag status-new";
+            }
+        }
+
+        /* --- FUNGSI TAMPILAN GRAFIK PROGRESS --- */
+
+        function openProgressScreen() {
+            mainCard.classList.add('wide-mode');
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            progressScreen.classList.remove('hidden');
+
+            renderProgressStatsAndChart();
+        }
+
+        function openProgressScreenFromResult() {
+            mainCard.classList.add('wide-mode');
+            resultScreen.classList.add('hidden');
+            progressScreen.classList.remove('hidden');
+
+            renderProgressStatsAndChart();
+        }
+
+        function closeProgressScreen() {
+            mainCard.classList.remove('wide-mode');
+            progressScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        function renderProgressStatsAndChart() {
+            const history = getSessionHistory();
+            const historyListContainer = document.getElementById('history-list-container');
+            
+            const sessionsCompleted = Object.keys(history);
+            historyListContainer.innerHTML = '';
+
+            if (sessionsCompleted.length === 0) {
+                document.getElementById('stat-total-sessions').innerText = '0';
+                document.getElementById('stat-avg-score').innerText = '0';
+                document.getElementById('stat-max-score').innerText = '0';
+                historyListContainer.innerHTML = '<p style="color: #94a3b8; font-size: 0.9rem; text-align: center; padding: 20px;">Belum ada sesi yang dikerjakan.</p>';
+
+                if (chartInstance) chartInstance.destroy();
+                return;
+            }
+
+            let scores = [];
+            let labels = [];
+            let totalScoreSum = 0;
+            let maxScore = 0;
+
+            // Mengurutkan sesi yang telah dikerjakan berdasarkan urutan daftarSesi
+            for (let sesiName in daftarSesi) {
+                if (history[sesiName] && history[sesiName].completed) {
+                    const data = history[sesiName];
+                    const maxPossible = data.total * 5;
+                    labels.push(sesiName);
+                    scores.push(data.score);
+
+                    totalScoreSum += data.score;
+                    if (data.score > maxScore) maxScore = data.score;
+
+                    // Buat elemen daftar riwayat
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.innerHTML = `
+                        <div>
+                            <strong>${sesiName}</strong>
+                            <div style="font-size: 0.75rem; color: #64748b;">Tanggal: ${data.date || '-'}</div>
+                        </div>
+                        <div style="font-weight: bold; color: var(--primary); font-size: 1rem;">
+                            ${data.score} <span style="font-size: 0.75rem; font-weight: normal; color: #64748b;">/ ${maxPossible}</span>
+                        </div>
+                    `;
+                    historyListContainer.appendChild(item);
+                }
+            }
+
+            const avgScore = (totalScoreSum / sessionsCompleted.length).toFixed(1);
+
+            document.getElementById('stat-total-sessions').innerText = sessionsCompleted.length;
+            document.getElementById('stat-avg-score').innerText = avgScore;
+            document.getElementById('stat-max-score').innerText = maxScore;
+
+            // Render Chart.js
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Skor Per Sesi (Max 250)',
+                        data: scores,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#1e3a8a',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Skor: ${context.raw} Poin`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 250,
+                            ticks: {
+                                stepSize: 50
+                            },
+                            grid: {
+                                color: '#e2e8f0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        /* --- FUNGSI KUIS --- */
+
+        function startQuiz() {
+            currentSessionName = selectSesi.value;
+            activeQuizData = daftarSesi[currentSessionName];
+
+            mainCard.classList.add('wide-mode');
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            reviewScreen.classList.add('hidden');
+            progressScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            currentIdx = 0;
+            correctCount = 0;
+            userAnswers = new Array(activeQuizData.length).fill(null);
+            
+            renderNavGrid();
+            loadQuestion();
+        }
+
+        function renderNavGrid() {
+            navGrid.innerHTML = '';
+            activeQuizData.forEach((_, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.id = `num-btn-${idx}`;
+                btn.innerText = idx + 1;
+                btn.onclick = () => jumpToQuestion(idx);
+                navGrid.appendChild(btn);
+            });
+        }
+
+        function updateNavGridStatus() {
+            activeQuizData.forEach((_, idx) => {
+                const btn = document.getElementById(`num-btn-${idx}`);
+                if (!btn) return;
+
+                btn.className = 'num-btn';
+                if (userAnswers[idx] !== null) btn.classList.add('answered');
+                if (idx === currentIdx) btn.classList.add('active');
+            });
+        }
+
+        function loadQuestion() {
+            resetTimer();
+            selectedOption = userAnswers[currentIdx];
+            
+            const q = activeQuizData[currentIdx];
+            questionCount.innerText = `Soal ${currentIdx + 1} / ${activeQuizData.length}`;
+            questionText.innerText = q.soal;
+            
+            optionsContainer.innerHTML = '';
+            q.pilihan.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                if (selectedOption === idx) btn.classList.add('selected');
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            updateNavGridStatus();
+            startTimer();
+        }
+
+        function selectOption(idx, btnElement) {
+            selectedOption = idx;
+            userAnswers[currentIdx] = idx;
+            document.querySelectorAll('#options-container .option-btn').forEach(b => b.classList.remove('selected'));
+            btnElement.classList.add('selected');
+            updateNavGridStatus();
+        }
+
+        function jumpToQuestion(targetIdx) {
+            resetTimer();
+            currentIdx = targetIdx;
+            loadQuestion();
+        }
+
+        function startTimer() {
+            timeLeft = TIMER_LIMIT;
+            timerDisplay.innerText = `Waktu: ${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = `Waktu: ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    nextQuestion();
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function nextQuestion() {
+            resetTimer();
+            currentIdx++;
+            if (currentIdx < activeQuizData.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            mainCard.classList.remove('wide-mode');
+            quizScreen.classList.add('hidden');
+            reviewScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            correctCount = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans !== null && ans === activeQuizData[idx].jawaban) {
+                    correctCount++;
+                }
+            });
+
+            const totalSoal = activeQuizData.length;
+            const finalScoreNum = correctCount * 5; 
+            
+            // Simpan status pengerjaan ke LocalStorage
+            saveSessionHistory(currentSessionName, finalScoreNum, totalSoal);
+
+            document.getElementById('final-score').innerText = finalScoreNum;
+            document.getElementById('stat-detail').innerText = `Benar: ${correctCount} | Salah/Kosong: ${totalSoal - correctCount}`;
+        }
+
+        /* --- FUNGSI PEMBAHASAN INTERAKTIF --- */
+
+        function startReview() {
+            mainCard.classList.add('wide-mode');
+            resultScreen.classList.add('hidden');
+            reviewScreen.classList.remove('hidden');
+            reviewIdx = 0;
+
+            renderReviewNavGrid();
+            loadReviewQuestion();
+        }
+
+        function renderReviewNavGrid() {
+            reviewNavGrid.innerHTML = '';
+            activeQuizData.forEach((q, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'num-btn';
+                btn.id = `rev-btn-${idx}`;
+                btn.innerText = idx + 1;
+                btn.onclick = () => jumpToReview(idx);
+                reviewNavGrid.appendChild(btn);
+            });
+        }
+
+        function updateReviewNavGridStatus() {
+            activeQuizData.forEach((q, idx) => {
+                const btn = document.getElementById(`rev-btn-${idx}`);
+                if (!btn) return;
+
+                const uAns = userAnswers[idx];
+                const isCorrect = uAns === q.jawaban;
+
+                btn.className = 'num-btn';
+                if (isCorrect) {
+                    btn.classList.add('rev-correct');
+                } else {
+                    btn.classList.add('rev-wrong');
+                }
+
+                if (idx === reviewIdx) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function loadReviewQuestion() {
+            const q = activeQuizData[reviewIdx];
+            const uAns = userAnswers[reviewIdx];
+            const isCorrect = uAns === q.jawaban;
+
+            reviewCount.innerText = `Pembahasan No. ${reviewIdx + 1} / ${activeQuizData.length}`;
+            
+            if (uAns === null) {
+                reviewStatusBadge.innerText = "TIDAK DIJAWAB";
+                reviewStatusBadge.style.background = "#fee2e2";
+                reviewStatusBadge.style.color = "#dc2626";
+            } else if (isCorrect) {
+                reviewStatusBadge.innerText = "JAWABAN BENAR (+5)";
+                reviewStatusBadge.style.background = "#dcfce7";
+                reviewStatusBadge.style.color = "#16a34a";
+            } else {
+                reviewStatusBadge.innerText = "JAWABAN SALAH (0)";
+                reviewStatusBadge.style.background = "#fee2e2";
+                reviewStatusBadge.style.color = "#dc2626";
+            }
+
+            reviewQuestionText.innerText = q.soal;
+            reviewExplanationText.innerText = q.pembahasan;
+
+            reviewOptionsContainer.innerHTML = '';
+            q.pilihan.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+
+                if (idx === q.jawaban) {
+                    btn.classList.add('opt-correct');
+                    btn.innerText += "  ✓ (Kunci Jawaban)";
+                } else if (idx === uAns && !isCorrect) {
+                    btn.classList.add('opt-wrong');
+                    btn.innerText += "  ✗ (Jawaban Kamu)";
+                }
+
+                reviewOptionsContainer.appendChild(btn);
+            });
+
+            updateReviewNavGridStatus();
+        }
+
+        function jumpToReview(idx) {
+            reviewIdx = idx;
+            loadReviewQuestion();
+        }
+
+        function nextReview() {
+            if (reviewIdx < activeQuizData.length - 1) {
+                reviewIdx++;
+                loadReviewQuestion();
+            }
+        }
+
+        function prevReview() {
+            if (reviewIdx > 0) {
+                reviewIdx--;
+                loadReviewQuestion();
+            }
+        }
+
+        function backToResult() {
+            mainCard.classList.remove('wide-mode');
+            reviewScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            mainCard.classList.remove('wide-mode');
+            startScreen.classList.remove('hidden');
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            reviewScreen.classList.add('hidden');
+            progressScreen.classList.add('hidden');
+            loadSessionDropdown();
+        }
+    </script>
+</body>
+</html>
