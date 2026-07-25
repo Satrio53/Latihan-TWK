@@ -1,6 +1,4 @@
-if (typeof daftarSesi === 'undefined') {
-    var daftarSesi = {};
-}
+
 daftarSesi = {
   "Sesi 1: TWK HOTS (Set A)": [
     {
