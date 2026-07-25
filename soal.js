@@ -1,25 +1,24 @@
-// ==========================================
 // KONFIGURASI FIREBASE REALTIME
-// ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDhqpvWkEc3S3xMEIqdOS4jwrumkQ49tSM",
-  authDomain: "latihan-twk-5dedd.firebaseapp.com",
-  databaseURL: "https://latihan-twk-5dedd-default-rtdb.firebaseio.com",
-  projectId: "latihan-twk-5dedd",
-  storageBucket: "latihan-twk-5dedd.firebasestorage.app",
-  messagingSenderId: "894125515312",
-  appId: "1:894125515312:web:5bf7689b71e306ce99c3f5",
-  measurementId: "G-YEGTGVGXLY"
+    apiKey: "AlzaSyDhqpvWkEc3S3xMElqdOS4jwrumkQ49tSM",
+    authDomain: "latihan-twk-5dedd.firebaseapp.com",
+    databaseURL: "https://latihan-twk-5dedd-default-rtdb.firebaseio.com",
+    projectId: "latihan-twk-5dedd",
+    storageBucket: "latihan-twk-5dedd.firebasestorage.app",
+    messagingSenderId: "894125515312",
+    appId: "1:894125515312:web:5bf7689b71e306ce99c3f5",
+    measurementId: "G-YEGTGVGXLY"
 };
 
 // Inisialisasi Firebase
 if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
+
 const db = (typeof firebase !== 'undefined') ? firebase.database() : null;
 
 // ID Pengguna tetap agar HP dan Laptop tersambung ke data yang sama
-const USER_ID = "satrio_main_user"; 
+const USER_ID = "satrio_main_user";
 
 // Fungsi Kirim Jawaban ke Cloud Realtime
 function simpanJawabanKeCloud(namaSesi, nomorSoal, pilihanJawaban) {
