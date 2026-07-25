@@ -1,5 +1,7 @@
-
-const daftarSesi = {
+if (typeof daftarSesi === 'undefined') {
+    var daftarSesi = {};
+}
+daftarSesi = {
   "Sesi 1: TWK HOTS (Set A)": [
     {
       soal: "1. Konsep Pancasila sebagai ideologi terbuka memiliki makna bahwa nilai-nilai dasarnya tidak dapat diubah, tetapi pelaksanaannya dapat dikembangkan sesuai konteks zaman. Berikut ini yang merupakan contoh penerapan Pancasila sebagai ideologi terbuka dalam kehidupan berbangsa dan bernegara adalah...",
@@ -3028,61 +3030,66 @@ const daftarSesi = {
 // =========================================================
 
 // 1. Listener untuk baca file .txt
-document.getElementById('inputTxt').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+// AMANKAN DENGAN PENGECEKAN ELEMEN
+const inputTxt = document.getElementById('inputTxt');
 
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const isiTeks = event.target.result;
-        const semuaSoal = parseTxtToJSON(isiTeks);
+if (inputTxt) {
+    inputTxt.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-        if (semuaSoal.length > 0) {
-            const JUMLAH_PER_SESI = 50;
-            const totalSesi = Math.ceil(semuaSoal.length / JUMLAH_PER_SESI);
-            
-            const namaBase = file.name.replace(/\.[^/.]+$/, "");
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const isiTeks = event.target.result;
+            const semuaSoal = parseTxtToJSON(isiTeks);
 
-            for (let i = 0; i < totalSesi; i++) {
-                const startIdx = i * JUMLAH_PER_SESI;
-                const endIdx = startIdx + JUMLAH_PER_SESI;
+            if (semuaSoal.length > 0) {
+                const JUMLAH_PER_SESI = 50;
+                const totalSesi = Math.ceil(semuaSoal.length / JUMLAH_PER_SESI);
                 
-                let potonganSoal = semuaSoal.slice(startIdx, endIdx);
+                const namaBase = file.name.replace(/\.[^/.]+$/, "");
 
-                // PENOMORAN ULANG YANG AMAN (PER SESI 1-50)
-                let soalFormatted = potonganSoal.map((item, index) => {
-                    return {
-                        ...item,
-                        soal: `${index + 1}. ${item.soal}` // Pasang nomor baru 1-50 + teks soal asli
-                    };
-                });
+                for (let i = 0; i < totalSesi; i++) {
+                    const startIdx = i * JUMLAH_PER_SESI;
+                    const endIdx = startIdx + JUMLAH_PER_SESI;
+                    
+                    let potonganSoal = semuaSoal.slice(startIdx, endIdx);
 
-                let namaSesiBaru = `${namaBase} - Sesi ${i + 1}`;
-                daftarSesi[namaSesiBaru] = soalFormatted;
+                    // PENOMORAN ULANG YANG AMAN (PER SESI 1-50)
+                    let soalFormatted = potonganSoal.map((item, index) => {
+                        return {
+                            ...item,
+                            soal: `${index + 1}. ${item.soal}` // Pasang nomor baru 1-50 + teks soal asli
+                        };
+                    });
+
+                    let namaSesiBaru = `${namaBase} - Sesi ${i + 1}`;
+                    daftarSesi[namaSesiBaru] = soalFormatted;
+                }
+
+                if (typeof loadSessionDropdown === 'function') {
+                    loadSessionDropdown();
+                }
+
+                const namaSesiPertama = `${namaBase} - Sesi 1`;
+                const selectSesi = document.getElementById('pilihSesi');
+                if (selectSesi) {
+                    selectSesi.value = namaSesiPertama;
+                }
+
+                if (typeof updateSessionStatusUI === 'function') {
+                    updateSessionStatusUI();
+                }
+
+                alert(`Mantap! ${semuaSoal.length} soal berhasil dibagi menjadi ${totalSesi} Sesi.`);
+            } else {
+                alert("Format teks tidak terbaca! Pastikan ada nomor soal, opsi pilihan, kunci, dan pembahasan.");
             }
+        };
 
-            if (typeof loadSessionDropdown === 'function') {
-                loadSessionDropdown();
-            }
-
-            const namaSesiPertama = `${namaBase} - Sesi 1`;
-            const selectSesi = document.getElementById('pilihSesi');
-            if (selectSesi) {
-                selectSesi.value = namaSesiPertama;
-            }
-
-            if (typeof updateSessionStatusUI === 'function') {
-                updateSessionStatusUI();
-            }
-
-            alert(`Mantap! ${semuaSoal.length} soal berhasil dibagi menjadi ${totalSesi} Sesi.`);
-        } else {
-            alert("Format teks tidak terbaca! Pastikan ada nomor soal, opsi pilihan, kunci, dan pembahasan.");
-        }
-    };
-
-    reader.readAsText(file, 'UTF-8');
-});
+        reader.readAsText(file, 'UTF-8');
+    });
+}
 
 // FUNGSI PARSER DENGAN PENANGANAN BARIS MULTIPLE
 function parseTxtToJSON(text) {
