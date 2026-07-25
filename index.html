@@ -5,9 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Try Out TWK SKD STAN</title>
     <!-- Chart.js Library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Firebase App (koreksi compat SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDhqpvWkEc3S3xMEIqdOS4jwrumkQ49tSM",
+    authDomain: "latihan-twk-5dedd.firebaseapp.com",
+    databaseURL: "https://latihan-twk-5dedd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "latihan-twk-5dedd",
+    storageBucket: "latihan-twk-5dedd.firebasestorage.app",
+    messagingSenderId: "894125515312",
+    appId: "1:894125515312:web:5bf7689b71e306ce99c3f5",
+    measurementId: "G-YEGTGVGXLY"
+  };
+
+  // Inisialisasi Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+</script>
+
+<script src="soal.js"></script>
 </script>
 
     <style>

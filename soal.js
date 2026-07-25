@@ -1,36 +1,4 @@
-// KONFIGURASI FIREBASE REALTIME
-const firebaseConfig = {
-    apiKey: "AlzaSyDhqpvWkEc3S3xMElqdOS4jwrumkQ49tSM",
-    authDomain: "latihan-twk-5dedd.firebaseapp.com",
-    databaseURL: "https://latihan-twk-5dedd-default-rtdb.firebaseio.com",
-    projectId: "latihan-twk-5dedd",
-    storageBucket: "latihan-twk-5dedd.firebasestorage.app",
-    messagingSenderId: "894125515312",
-    appId: "1:894125515312:web:5bf7689b71e306ce99c3f5",
-    measurementId: "G-YEGTGVGXLY"
-};
 
-// Inisialisasi Firebase
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-const db = (typeof firebase !== 'undefined') ? firebase.database() : null;
-
-// ID Pengguna tetap agar HP dan Laptop tersambung ke data yang sama
-const USER_ID = "satrio_main_user";
-
-// Fungsi Kirim Jawaban ke Cloud Realtime
-function simpanJawabanKeCloud(namaSesi, nomorSoal, pilihanJawaban) {
-    if (!db) return;
-    const safeSesi = namaSesi.replace(/[^a-zA-Z0-9_-]/g, "_");
-    
-    db.ref(`progres_user/${USER_ID}/${safeSesi}/soal_${nomorSoal}`).set({
-        jawaban: pilihanJawaban,
-        updatedAt: Date.now()
-    });
-}
-// ==========================================
 const daftarSesi = {
   "Sesi 1: TWK HOTS (Set A)": [
     {
@@ -3247,4 +3215,25 @@ function parseTxtToJSON(text) {
     });
 
     return listSoal;
+}
+
+// Contoh fungsi untuk kirim skor/progres ke Firebase
+function simpanProgresKeFirebase(sesiId, skor, totalSoal) {
+    if (typeof firebase !== 'undefined' && firebase.database) {
+        const db = firebase.database();
+        
+        // Simpan data ke node 'riwayat_pengerjaan'
+        db.ref('riwayat_pengerjaan/' + sesiId).set({
+            skor: skor,
+            totalSoal: totalSoal,
+            waktu: new Date().toISOString(),
+            status: 'SELESAI'
+        }).then(() => {
+            console.log("Berhasil terkirim ke Firebase!");
+        }).catch((error) => {
+            console.error("Gagal kirim ke Firebase:", error);
+        });
+    } else {
+        console.error("Firebase SDK belum siap!");
+    }
 }
