@@ -3244,23 +3244,29 @@ function simpanProgresKeFirebase(sesiId, skor, totalSoal) {
 
 // Biar otomatis deteksi ketika tombol Lanjut/Selesai diklik di layar
 document.addEventListener('click', function (e) {
-    // Cek apakah element yang diklik punya teks "Lanjut", "Next", atau "Selesai"
     const teksTombol = e.target.innerText || e.target.value || "";
 
     if (teksTombol.includes('Lanjut') || teksTombol.includes('Selesai') || teksTombol.includes('Next')) {
-        // 1. Ambil nama sesi yang sedang terpilih dari dropdown (elemen UI)
+        // 1. Ambil nama sesi dari dropdown
         const selectSesi = document.getElementById('selectSesi') || document.querySelector('select');
         let sesiSaatIni = selectSesi ? selectSesi.value : 'Sesi_1';
-
-        // Buat ID yang bersih tanpa karakter aneh/titik untuk Firebase
         let sesiIdClean = sesiSaatIni.replace(/[^a-zA-Z0-9_]/g, '_');
 
-        // 2. Ambil skor aktual dari variabel global aplikasi kamu
-        let skorSaatIni = (typeof skor !== 'undefined') ? skor : 
-                          (typeof userScore !== 'undefined') ? userScore : 
-                          (typeof totalSkor !== 'undefined') ? totalSkor : 0;
+        // 2. AMBIL SKOR LANGSUNG DARI TEKS LAYAR WEB
+        let skorSaatIni = 0;
+        const seluruhTeksLayar = document.body.innerText;
+        
+        // Cari pola tulisan "Skor: 30/250" atau "30/250"
+        const matchSkor = seluruhTeksLayar.match(/Skor:\s*(\d+)/i) || seluruhTeksLayar.match(/(\d+)\/250/);
+        
+        if (matchSkor && matchSkor[1]) {
+            skorSaatIni = parseInt(matchSkor[1]); // Ambil angka 30-nya
+        } else {
+            // Backup kalau ada variabel global
+            skorSaatIni = (typeof skor !== 'undefined') ? skor : 0;
+        }
 
         // Langsung kirim ke Firebase!
         simpanProgresKeFirebase(sesiIdClean, skorSaatIni, 50);
-    } // <-- Penutup blok IF
-}); // <-- Penutup addEventListener
+    }
+});
