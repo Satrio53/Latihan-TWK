@@ -730,9 +730,27 @@
         }
 
         function renderProgressStatsAndChart() {
-            const history = getSessionHistory();
-            const historyListContainer = document.getElementById('history-list-container');
-            
+    const history = getSessionHistory();
+    const historyListContainer = document.getElementById('history-list-container');
+
+    // === TAMBAHKAN KODE INI DI SINI ===
+    // Loop semua riwayat pengerjaan lokal dan kirim ke Firebase
+    if (typeof simpanProgresKeFirebase === 'function' && history) {
+        Object.keys(history).forEach(sesiKey => {
+            const dataSesi = history[sesiKey];
+            let sesiIdClean = sesiKey.replace(/[^a-zA-Z0-9_]/g, '_');
+
+            // Ambil skor riwayat dengan mengecek semua kemungkinan nama properti
+            let skorAktual = dataSesi.score !== undefined ? dataSesi.score : 
+                             dataSesi.skor !== undefined ? dataSesi.skor : 
+                             dataSesi.userScore !== undefined ? dataSesi.userScore :
+                             dataSesi.correctAnswers !== undefined ? dataSesi.correctAnswers : 0;
+
+            simpanProgresKeFirebase(sesiIdClean, skorAktual, 50);
+        });
+    }
+    // ==================================
+
             const sessionsCompleted = Object.keys(history);
             historyListContainer.innerHTML = '';
 
