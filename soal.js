@@ -1,5 +1,5 @@
-
-daftarSesi = {
+window.daftarSesi = window.daftarSesi || {};
+Object.assign(window.daftarSesi, {
   "Sesi 1: TWK HOTS (Set A)": [
     {
       soal: "1. Konsep Pancasila sebagai ideologi terbuka memiliki makna bahwa nilai-nilai dasarnya tidak dapat diubah, tetapi pelaksanaannya dapat dikembangkan sesuai konteks zaman. Berikut ini yang merupakan contoh penerapan Pancasila sebagai ideologi terbuka dalam kehidupan berbangsa dan bernegara adalah...",
@@ -3019,7 +3019,7 @@ daftarSesi = {
         pembahasan: "Menampilkan khazanah kebudayaan Nusantara secara majemuk mempromosikan potensi lokal sekaligus memupuk kebanggaan atas kekayaan warisan kebudayaan nasional."
     }
 ]
-}
+});
 
 // ... KODE LAMA KAMU (fungsi startQuiz, loadSessionDropdown, dll) ...
 
