@@ -3246,13 +3246,21 @@ function simpanProgresKeFirebase(sesiId, skor, totalSoal) {
 document.addEventListener('click', function (e) {
     // Cek apakah element yang diklik punya teks "Lanjut", "Next", atau "Selesai"
     const teksTombol = e.target.innerText || e.target.value || "";
-    
+
     if (teksTombol.includes('Lanjut') || teksTombol.includes('Selesai') || teksTombol.includes('Next')) {
-        // Ambil skor & sesi saat ini dari tampilan/localStorage kamu
-        let skorSaatIni = localStorage.getItem('skor_terakhir') || 0; 
-        let sesiSaatIni = localStorage.getItem('sesi_aktif') || 'Sesi_1';
+        // 1. Ambil nama sesi yang sedang terpilih dari dropdown (elemen UI)
+        const selectSesi = document.getElementById('selectSesi') || document.querySelector('select');
+        let sesiSaatIni = selectSesi ? selectSesi.value : 'Sesi_1';
+
+        // Buat ID yang bersih tanpa karakter aneh/titik untuk Firebase
+        let sesiIdClean = sesiSaatIni.replace(/[^a-zA-Z0-9_]/g, '_');
+
+        // 2. Ambil skor aktual dari variabel global aplikasi kamu
+        let skorSaatIni = (typeof skor !== 'undefined') ? skor : 
+                          (typeof userScore !== 'undefined') ? userScore : 
+                          (typeof totalSkor !== 'undefined') ? totalSkor : 0;
 
         // Langsung kirim ke Firebase!
-        simpanProgresKeFirebase(sesiSaatIni, skorSaatIni, 50);
-    }
-});
+        simpanProgresKeFirebase(sesiIdClean, skorSaatIni, 50);
+    } // <-- Penutup blok IF
+}); // <-- Penutup addEventListener
