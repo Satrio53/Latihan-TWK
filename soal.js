@@ -3223,11 +3223,10 @@ function parseTxtToJSON(text) {
 }
 
 // Contoh fungsi untuk kirim skor/progres ke Firebase
+// Fungsi kirim skor/progres ke Firebase
 function simpanProgresKeFirebase(sesiId, skor, totalSoal) {
-    if (typeof firebase !== 'undefined' && firebase.database) {
-        const db = firebase.database();
-        
-        // Simpan data ke node 'riwayat_pengerjaan'
+    // Pakai variabel db global yang udah ada dari index.html
+    if (typeof db !== 'undefined') {
         db.ref('riwayat_pengerjaan/' + sesiId).set({
             skor: skor,
             totalSoal: totalSoal,
@@ -3239,6 +3238,21 @@ function simpanProgresKeFirebase(sesiId, skor, totalSoal) {
             console.error("Gagal kirim ke Firebase:", error);
         });
     } else {
-        console.error("Firebase SDK belum siap!");
+        console.error("Firebase SDK / db belum siap!");
     }
 }
+
+// Biar otomatis deteksi ketika tombol Lanjut/Selesai diklik di layar
+document.addEventListener('click', function (e) {
+    // Cek apakah element yang diklik punya teks "Lanjut", "Next", atau "Selesai"
+    const teksTombol = e.target.innerText || e.target.value || "";
+    
+    if (teksTombol.includes('Lanjut') || teksTombol.includes('Selesai') || teksTombol.includes('Next')) {
+        // Ambil skor & sesi saat ini dari tampilan/localStorage kamu
+        let skorSaatIni = localStorage.getItem('skor_terakhir') || 0; 
+        let sesiSaatIni = localStorage.getItem('sesi_aktif') || 'Sesi_1';
+
+        // Langsung kirim ke Firebase!
+        simpanProgresKeFirebase(sesiSaatIni, skorSaatIni, 50);
+    }
+});
